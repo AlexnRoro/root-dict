@@ -38,6 +38,11 @@ const EnhancedRootAnalyzer = {
     
     // 智能分析算法
     intelligentAnalyze(word) {
+        // 0. 检查是否为完整借词（不应分割）
+        if (this.isIntactWord(word)) {
+            return [{ root: word, meaning: "完整词根" }];
+        }
+        
         // 1. 优先检查完整复合词
         const compoundResult = this.analyzeCompound(word);
         if (compoundResult.length > 1) {
@@ -211,6 +216,30 @@ const EnhancedRootAnalyzer = {
             'through': '通过'
         };
         return meanings[prefix] || '前缀';
+    },
+    
+    // 检查是否为完整词（基于语言学规律）
+    isIntactWord(word) {
+        // 基于词长和结构特征判断
+        if (word.length <= 4) return false;
+        
+        // 拉丁借词特征：以-um, -us, -ium结尾
+        if (/^[a-z]{4,}(um|us|ium)$/.test(word)) return true;
+        
+        // 希腊借词特征：包含ph, th, ch组合
+        if (/^[a-z]{5,}$/.test(word) && /(ph|th|ch|gy|my)/.test(word)) return true;
+        
+        // 法语借词特征：以-ent, -ant结尾但不是形容词
+        if (/^[a-z]{6,}(ent|ant)$/.test(word) && this.isNounNotAdjective(word)) return true;
+        
+        return false;
+    },
+    
+    // 判断是否为名词而非形容词
+    isNounNotAdjective(word) {
+        // 基于语义和使用频率的启发式判断
+        const nounIndicators = ['talent', 'parent', 'student', 'agent', 'client'];
+        return nounIndicators.includes(word);
     },
     
     // 获取词根含义
